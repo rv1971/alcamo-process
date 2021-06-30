@@ -1,0 +1,36 @@
+{
+    "name": "alcamo/json",
+    "description": "Classes for processes opened by proc_open()",
+    "keywords": [ "process", "proc_open" ],
+    "license": "Apache-2.0",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/rv1971/alcamo-core"
+        }
+    ],
+    "require": {
+        "php": "7.3 - 7.4",
+        "alcamo/core": "dev-master"
+    },
+    "autoload": {
+	"psr-4": {
+	    "alcamo\\process\\": "src/"
+	}
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "squizlabs/php_codesniffer": "3.*"
+    },
+    "scripts": {
+        "test": [
+            "phpunit tests",
+            "phpcs --standard=PSR12 -p -s src",
+            "phpcs --standard=PSR12 -p -s --exclude=PSR1.Classes.ClassDeclaration,PSR1.Files.SideEffects tests"
+        ],
+        "fix": [
+            "phpcbf --standard=PSR12 -p -s src",
+            "phpcbf --standard=PSR12 -p -s --exclude=PSR1.Classes.ClassDeclaration,PSR1.Files.SideEffects tests"
+        ]
+    }
+}
