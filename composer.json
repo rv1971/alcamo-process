@@ -1,5 +1,5 @@
 {
-    "name": "alcamo/json",
+    "name": "alcamo/process",
     "description": "Classes for processes opened by proc_open()",
     "keywords": [ "process", "proc_open" ],
     "license": "Apache-2.0",
