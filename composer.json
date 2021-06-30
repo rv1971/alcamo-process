@@ -3,15 +3,9 @@
     "description": "Classes for processes opened by proc_open()",
     "keywords": [ "process", "proc_open" ],
     "license": "Apache-2.0",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/rv1971/alcamo-core"
-        }
-    ],
     "require": {
         "php": "7.3 - 7.4",
-        "alcamo/core": "dev-master"
+        "alcamo/core": "^0.1"
     },
     "autoload": {
 	"psr-4": {
