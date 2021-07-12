@@ -5,6 +5,12 @@ namespace alcamo\process;
 use alcamo\exception\{Closed, DirectoryNotFound, Opened, PopenFailed};
 
 /**
+ * @namespace alcamo::process
+ *
+ * @brief Classes for processes opened by proc_open()
+ */
+
+/**
  * @brief Process opened by proc_open()
  *
  * @sa [proc_open()](https://www.php.net/manual/en/function.proc-open)
