@@ -29,7 +29,7 @@ class OutputProcess extends Process
     ];
 
     /// Call the corresponding function, if supported
-    public function __call($name, $params)
+    public function __call(string $name, array $params)
     {
         if (!in_array($name, static::MAGIC_METHODS)) {
             /** @throw alcamo::exception::Unsupported is $name is not a
