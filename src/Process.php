@@ -60,7 +60,8 @@ class Process
             if ($this->dir_ === false) {
                 /** @throw alcamo::exception::DirectoryNotFound if
                  *  `realpath($dir)` fails */
-                throw new DirectoryNotFound($dir);
+                throw (new DirectoryNotFound())
+                    ->setMessageContext([ 'path' => $dir ]);
             }
         }
 
@@ -101,7 +102,13 @@ class Process
         if (isset($this->process_)) {
             /** @throw alcamo::exception::Opened if process is already
              *  open. */
-            throw new Opened($this->process_);
+            throw (new Opened())
+                ->setMessageContext(
+                    [
+                        'objectType' => 'process',
+                        'object' => $this->process_
+                    ]
+                );
         }
 
         $this->process_ = proc_open(
@@ -119,7 +126,8 @@ class Process
             /** @throw alcamo::exception::PopenFailed if
              *  [proc_open()](https://www.php.net/manual/en/function.proc-open)
              *  fails */
-            throw new PopenFailed($this->cmd_);
+            throw (new PopenFailed())
+                ->setMessageContext([ 'command' => $this->cmd_ ]);
         }
     }
 
@@ -129,7 +137,13 @@ class Process
         if (!isset($this->process_)) {
             /** @throw alcamo::exception::Closed if process is already
              *  closed. */
-            throw new Closed('process');
+            throw (new Closed())
+                ->setMessageContext(
+                    [
+                        'objectType' => 'process',
+                        'object' => $this->process_
+                    ]
+                );
         }
 
         $exitcode = proc_close($this->process_);

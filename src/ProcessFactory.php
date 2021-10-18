@@ -51,7 +51,8 @@ class ProcessFactory
             if ($this->dir_ === false) {
                 /** @throw alcamo::exception::DirectoryNotFound if
                  *  `realpath($dir)` fails */
-                throw new DirectoryNotFound($dir);
+                throw (new DirectoryNotFound())
+                    ->setMessageContext([ 'path' => $dir ]);
             }
         }
 

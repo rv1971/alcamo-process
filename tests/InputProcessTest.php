@@ -98,7 +98,7 @@ class InputProcessTest extends TestCase
 
         $this->expectException(Opened::class);
         $this->expectExceptionMessage(
-            'Attempt to open already opened Resource'
+            'Attempt to open already opened process "Resource'
         );
 
         $process->open();
@@ -111,7 +111,7 @@ class InputProcessTest extends TestCase
 
         $this->expectException(Closed::class);
         $this->expectExceptionMessage(
-            'Attempt to use closed process'
+            'Attempt to use closed process <null>'
         );
 
         $process->close();
@@ -122,7 +122,7 @@ class InputProcessTest extends TestCase
         $process = new InputProcess('echo');
 
         $this->expectException(Unsupported::class);
-        $this->expectExceptionMessage('foo() not supported');
+        $this->expectExceptionMessage('"foo" not supported');
 
         $process->foo();
     }

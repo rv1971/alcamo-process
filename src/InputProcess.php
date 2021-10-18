@@ -41,7 +41,8 @@ class InputProcess extends Process
         if (!in_array($name, static::MAGIC_METHODS)) {
             /** @throw alcamo::exception::Unsupported is $name is not a
              *  supported method, i.e. not listed in @ref MAGIC_METHODS. */
-            throw new Unsupported("$name()");
+            throw (new Unsupported())
+                ->setMessageContext([ 'feature' => $name ]);
         }
 
         return $name($this->pipes_[1], ...$params);
