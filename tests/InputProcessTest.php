@@ -111,7 +111,7 @@ class InputProcessTest extends TestCase
 
         $this->expectException(Closed::class);
         $this->expectExceptionMessage(
-            'Attempt to use closed process <null>'
+            'Attempt to use closed process <alcamo\process\InputProcess>'
         );
 
         $process->close();
