@@ -98,7 +98,7 @@ class InputProcessTest extends TestCase
 
         $this->expectException(Opened::class);
         $this->expectExceptionMessage(
-            'Attempt to open already opened process "Resource'
+            'Attempt to open already opened process "echo"'
         );
 
         $process->open();

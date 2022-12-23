@@ -106,7 +106,7 @@ class Process
                 ->setMessageContext(
                     [
                         'objectType' => 'process',
-                        'object' => $this->process_
+                        'object' => $this->cmd_
                     ]
                 );
         }
