@@ -13,6 +13,14 @@ use alcamo\exception\{Closed, DirectoryNotFound, Opened, PopenFailed};
 /**
  * @brief Process opened by proc_open()
  *
+ * @warning A code fragment like
+ * `$resource = (new Process('dir'))->getStdout()`
+ * will not work as expected because the existence of the `$resource` variable
+ * will not inhibit PHP from destroying the `Process` object. Hence the process
+ * will be terminated before reading anything from its output. To avoid this,
+ * the process must be stored in a variable which is destroyed only after all
+ * interaction with the child process is done.
+ *
  * @sa [proc_open()](https://www.php.net/manual/en/function.proc-open)
  *
  * @date Last reviewed 2021-06-15
