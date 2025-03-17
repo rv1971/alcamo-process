@@ -7,7 +7,7 @@ use alcamo\exception\Unsupported;
 /**
  * @brief Output process opened by proc_open()
  *
- * Process that received output from the current PHP process. The functions
+ * Process that receives output from the current PHP process. The functions
  * listed in @ref MAGIC_METHODS can be called as methods to this class.
  *
  * @sa [proc_open()](https://www.php.net/manual/en/function.proc-open)
