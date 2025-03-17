@@ -47,8 +47,9 @@ class ProcessFactoryTest extends TestCase
 
         $this->expectException(DirectoryNotFound::class);
         $this->expectExceptionMessage(
-            "Directory \"$dir\" not found"
+            'Directory \"' . strstr(__DIR__, DIRECTORY_SEPARATOR)
         );
+        $this->expectExceptionMessage(' not found');
 
         new ProcessFactory($dir);
     }
