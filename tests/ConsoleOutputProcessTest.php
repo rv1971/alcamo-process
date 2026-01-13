@@ -16,6 +16,8 @@ class ConsoleOutputProcessTest extends TestCase
 
         $data = "fxx bar baz\n";
 
+        /* This writes `foo bar baz` to the console, if the installation has
+         * an sed command. */
         $process->fwrite($data);
     }
 }

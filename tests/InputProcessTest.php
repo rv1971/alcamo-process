@@ -94,7 +94,7 @@ class InputProcessTest extends TestCase
         new InputProcess('echo', $dir);
     }
 
-    public function testOpened()
+    public function testOpenedException()
     {
         $process = new InputProcess('echo');
 
@@ -106,7 +106,7 @@ class InputProcessTest extends TestCase
         $process->open();
     }
 
-    public function testClosed()
+    public function testClosedException()
     {
         $process = new InputProcess('echo');
         $process->close();
@@ -119,7 +119,7 @@ class InputProcessTest extends TestCase
         $process->close();
     }
 
-    public function testUnsupported()
+    public function testUnsupportedException()
     {
         $process = new InputProcess('echo');
 

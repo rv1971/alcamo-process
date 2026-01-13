@@ -2,42 +2,17 @@
 
 namespace alcamo\process;
 
-use alcamo\exception\Unsupported;
-
 /**
- * @brief Output process opened by proc_open()
+ * @brief Process opened by proc_open() that can receive output from PHP
  *
- * Process that receives output from the current PHP process. The functions
- * listed in @ref MAGIC_METHODS can be called as methods to this class.
- *
- * @sa [proc_open()](https://www.php.net/manual/en/function.proc-open)
- *
- * @date Last reviewed 2021-06-15
+ * @date Last reviewed 2026-01-13
  */
 class OutputProcess extends Process
 {
-    /**
-     * Each of these can be called as a method and will call the php function
-     * with this name and the process' stdin as its first parameter.
-     */
     public const MAGIC_METHODS = [
-        'fputcsv',
-        'fputs',
-        'fstat',
-        'fwrite',
-        'stream_get_meta_data'
+        'fputcsv' => 0,
+        'fputs'   => 0,
+        'fstat'   => 0,
+        'fwrite'  => 0
     ];
-
-    /// Call the corresponding function, if supported
-    public function __call(string $name, array $params)
-    {
-        if (!in_array($name, static::MAGIC_METHODS)) {
-            /** @throw alcamo::exception::Unsupported is $name is not a
-             *  supported method, i.e. not listed in @ref MAGIC_METHODS. */
-            throw (new Unsupported())
-                ->setMessageContext([ 'feature' => $name ]);
-        }
-
-        return $name($this->pipes_[0], ...$params);
-    }
 }
