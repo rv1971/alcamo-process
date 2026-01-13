@@ -11,11 +11,11 @@ $hello = $process->fgets();
 Now $hello contains the string "Hello, world!" (plus the
 platform-dependent line break).
 
-The usual PHP functions writing to reading from streams can be used as
-magic methods on Process objects to write to and read from the child
-process's standard input/output.
+The usual PHP functions writing to or reading from streams can be used
+as magic methods on `Process` objects to write to / read from the
+child process's standard input/output.
 
-A ProcessFactory class is provided to facilitate creating processes
+A `ProcessFactory` class is provided to facilitate creating processes
 which all use the same underlying program. For instance:
 
 ~~~
