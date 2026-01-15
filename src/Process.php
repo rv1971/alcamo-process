@@ -2,7 +2,7 @@
 
 namespace alcamo\process;
 
-use alcamo\exception\{Closed, DirectoryNotFound, Opened, PopenFailed, Unsupported};
+use alcamo\exception\{Closed, Opened, PopenFailed, Unsupported};
 
 /**
  * @namespace alcamo::process
@@ -14,7 +14,7 @@ use alcamo\exception\{Closed, DirectoryNotFound, Opened, PopenFailed, Unsupporte
  * @brief Process opened by proc_open()
  *
  * Provides some convenience by modelling a process as an object. In
- * particulare, alcamo::process::Process::MAGIC_METHODS provides a list of PHP
+ * particular, alcamo::process::Process::MAGIC_METHODS provides a list of PHP
  * functions for streams that can be invoked magically as methods on this
  * object and call the respective PHP function with the corresponding pipe of
  * the child process as its first argument.
@@ -33,6 +33,8 @@ use alcamo\exception\{Closed, DirectoryNotFound, Opened, PopenFailed, Unsupporte
  */
 class Process
 {
+    use ContextTrait;
+
     /// Descripor spec passed to proc_open()
     public const DESCRIPTOR_SPEC = [
         0 => [ 'pipe', 'r' ],
@@ -65,23 +67,29 @@ class Process
         'fwrite'              => 0
     ];
 
-    private $cmd_; ///< string|array
-    private $dir_; ///< ?string
-    private $env_; ///< ?array
-
     protected $pipes_;   ///< ?array
     protected $process_; ///< ?resource
 
     /**
      * @brief Open the process, unless $deferOpen is `true`
      *
-     * @param $cmd string|array command to execute
+     * @param $cmd string|array command to execute.
      *
      * @param $dir initial working directory, defaults to the working
-     * directory of the current PHP process
+     * directory of the current PHP process. If given, realpath() will be
+     * applied to it.
      *
-     * @param $env array with the environment variables for the command that
-     * will be run, defaults the same environment as the current PHP process
+     * @param $env array of the environment variables for the command that
+     * will be run, defaults to the same environment as the current PHP
+     * process.
+     *
+     * @paramm $descriptorSpec Descriptor spec passed to
+     * proc_open(). alcamo::process::Process::DESCRIPTOR_SPEC will be added to
+     * it. The descriptors 0, 1 and 2 will be assigned to their usual
+     * destinations if not specified.
+     *
+     * @param $options Options passed to proc_open(). Defaults to
+     * alcamo::process::Process::OPTIONS.
      *
      * @param $deferOpen if `true`, do not yet start the process
      */
@@ -89,29 +97,18 @@ class Process
         $cmd,
         ?string $dir = null,
         ?array $env = null,
+        ?array $descriptorSpec = null,
+        ?array $options = null,
         ?bool $deferOpen = null
     ) {
-        /** @warning For PHP versions < 7.4, an array $cmd is simply
-         *  transformed to a command line by wrapping each item into single
-         *  quotes. There are cases where this will not work. */
-        if (is_array($cmd) && PHP_VERSION_ID < 70400) {
-            $cmd = "'" . implode("' '", $cmd) . "'";
-        }
-
-        $this->cmd_ = $cmd;
-
-        if (isset($dir)) {
-            $this->dir_ = realpath($dir);
-
-            if ($this->dir_ === false) {
-                /** @throw alcamo::exception::DirectoryNotFound if
-                 *  `realpath($dir)` fails */
-                throw (new DirectoryNotFound())
-                    ->setMessageContext([ 'path' => $dir ]);
-            }
-        }
-
-        $this->env_ = $env;
+        $this->initContext(
+            $cmd,
+            $dir,
+            $env,
+            (array)$descriptorSpec
+                + static::DESCRIPTOR_SPEC + [ STDIN, STDOUT, STDERR ],
+            $options ?? static::OPTIONS
+        );
 
         if (!$deferOpen) {
             $this->open();
@@ -139,41 +136,25 @@ class Process
         return $name($this->pipes_[static::MAGIC_METHODS[$name]], ...$params);
     }
 
-    /// @return array|string
-    public function getCmd()
-    {
-        return $this->cmd_;
-    }
-
-    public function getDir(): ?string
-    {
-        return $this->dir_;
-    }
-
-    public function getEnv(): ?array
-    {
-        return $this->env_;
-    }
-
     /// PHP's end of any pipes connected to the child process
     public function getPipes(): array
     {
         return $this->pipes_;
     }
 
-    /// File pointer to standard input of child process
+    /// File pointer to standard input of child process, if any
     public function getStdin()
     {
         return $this->pipes_[0] ?? null;
     }
 
-    /// File pointer to standard output of child process
+    /// File pointer to standard output of child process, if any
     public function getStdout()
     {
         return $this->pipes_[1] ?? null;
     }
 
-    /// File pointer to standard error output of child process
+    /// File pointer to standard error output of child process, if any
     public function getStderr()
     {
         return $this->pipes_[2] ?? null;
@@ -196,11 +177,11 @@ class Process
 
         $this->process_ = proc_open(
             $this->cmd_,
-            $this->createDescriptorSpec(),
+            $this->descriptorSpec_,
             $this->pipes_,
             $this->dir_,
             $this->env_,
-            $this->createOtherOptions()
+            $this->options_
         );
 
         if ($this->process_ === false) {
@@ -235,27 +216,5 @@ class Process
         $this->pipes_ = null;
 
         return $exitcode;
-    }
-
-    /**
-     * @brief Create descriptor spec as used in proc_open()
-     *
-     * This implementation returns alcamo::process::Process::DESCRIPTOR_SPEC,
-     * whch may be overridden in derived classes.
-     */
-    protected function createDescriptorSpec(): array
-    {
-        return static::DESCRIPTOR_SPEC;
-    }
-
-    /**
-     * @brief Create other options as used in proc_open()
-     *
-     * This implementation returns alcamo::process::Process::OPTIONS, whch may
-     * be overridden in derived classes.
-     */
-    protected function createOtherOptions(): ?array
-    {
-        return static::OPTIONS;
     }
 }

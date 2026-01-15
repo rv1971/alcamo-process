@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 
 class OutputProcessTest extends TestCase
 {
-    public function testBasics()
+    public function testBasics(): void
     {
         $cmd = "php -r 'echo fgets(STDIN);'";
 

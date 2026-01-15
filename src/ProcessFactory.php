@@ -2,91 +2,66 @@
 
 namespace alcamo\process;
 
-use alcamo\exception\DirectoryNotFound;
-
 /**
  * @brief Factory for Process objects
  *
  * Simplifies creation of processes which have the same program, initial
- * working directory and environment. Useful as a base class for a wrapper of
- * an external program that offers many different uses.
+ * working directory and/or environment. Useful as a base class for a wrapper
+ * of an external program that offers many different uses.
  *
  * @date Last reviewed 2026-01-13
  */
 class ProcessFactory
 {
-    /// Program to start, to be overridden in derived classes
-    public const DEFAULT_PROGRAM = 'false';
+    use ContextTrait;
 
-    /// Default arguments to pass to the program
-    public const DEFAULT_ARGS = [];
+    /// Command to execute, to be overridden in derived classes
+    public const DEFAULT_CMD = [ 'false' ];
 
     /// Default process class to create
     public const DEFAULT_PROCESS_CLASS = Process::class;
 
-    private $dir_;          ///< ?string
-    private $program_;      ///< string
-    private $args_;         ///< array
-    private $env_;          ///< ?array
     private $processClass_; ///< string
 
     /**
      * @brief Set up the factory
      *
+     * @param $cmd string|array command to execute, defaults to
+     * alcamo::process::ProcessFactory::DEFAULT_CMD.
+     *
      * @param $dir initial working directory, defaults to the working
-     * directory of the current PHP process
+     * directory of the current PHP process. If given, realpath() will be
+     * applied to it.
      *
-     * @brief $program Program to start, defaults to
-     * alcamo::process::ProcessFactory::DEFAULT_PROGRAM
+     * @param $env array of the environment variables for the command that
+     * will be run, defaults to the same environment as the current PHP
+     * process.
      *
-     * @brief $args Arguments to always pass to the program, defaults to
-     * alcamo::process::ProcessFactory::DEFAULT_ARGS
+     * @paramm $descriptorSpec Descriptor spec passed to
+     * proc_open().
      *
-     * @param $env array with the environment variables for the command that
-     * will be run, defaults the same environment as the current PHP process
+     * @param $options Options passed to proc_open().
+     *
+     * @param $processClass Desired class to sue for the process to open,
+     * defaults to alcamo::process::Process.
      */
     public function __construct(
+        $cmd = null,
         ?string $dir = null,
-        ?string $program = null,
-        ?array $args = null,
         ?array $env = null,
+        ?array $descriptorSpec = null,
+        ?array $options = null,
         ?string $processClass = null
     ) {
-        if (isset($dir)) {
-            $this->dir_ = realpath($dir);
+        $this->initContext(
+            $cmd ?? static::DEFAULT_CMD,
+            $dir,
+            $env,
+            $descriptorSpec,
+            $options
+        );
 
-            if ($this->dir_ === false) {
-                /** @throw alcamo::exception::DirectoryNotFound if
-                 *  `realpath($dir)` fails */
-                throw (new DirectoryNotFound())
-                    ->setMessageContext([ 'path' => $dir ]);
-            }
-        }
-
-        $this->program_ = $program ?? static::DEFAULT_PROGRAM;
-        $this->args_ = $args ?? static::DEFAULT_ARGS;
-        $this->env_ = $env;
         $this->processClass_ = $processClass ?? static::DEFAULT_PROCESS_CLASS;
-    }
-
-    public function getDir(): ?string
-    {
-        return $this->dir_;
-    }
-
-    public function getProgram(): string
-    {
-        return $this->program_;
-    }
-
-    public function getArgs(): array
-    {
-        return $this->args_;
-    }
-
-    public function getEnv(): ?array
-    {
-        return $this->env_;
     }
 
     public function getProcessClass(): string
@@ -98,7 +73,7 @@ class ProcessFactory
      * @brief Execute the program and return an object of the desired
      * process class
      *
-     * @param $args ?string|?array Command-line arguments to append
+     * @param $args string|array|null Command-line arguments to append
      *
      * @param $deferOpen if `true`, do not yet start the process
      */
@@ -106,12 +81,39 @@ class ProcessFactory
         $args = null,
         ?bool $deferOpen = null
     ): Process {
+        /** @warning If either $this->cmd_ or $args is a string, the other one
+         *  is silently transformed to a string by wrapping each item into
+         *  single quotes. There are cases where this will not lead to the
+         *  desired result. */
+        switch (true) {
+            case !isset($args):
+                $cmd = $this->cmd_;
+                break;
+
+            case is_array($this->cmd_) && is_array($args):
+                $cmd = array_merge($this->cmd_, $args);
+                break;
+
+            case is_string($this->cmd_) && is_array($args):
+                $cmd = "$this->cmd_ '" . implode("' '", $args) . "'";
+                break;
+
+            case is_array($this->cmd_) && is_string($args):
+                $cmd = "'" . implode("' '", $this->cmd_) . "' $args";
+                break;
+
+            default:
+                $cmd = "$this->cmd_ $args";
+        }
+
         $class = $this->processClass_;
 
         return new $class(
-            array_merge([ $this->program_ ], $this->args_, (array)$args),
+            $cmd,
             $this->dir_,
             $this->env_,
+            $this->descriptorSpec_,
+            $this->options_,
             $deferOpen
         );
     }

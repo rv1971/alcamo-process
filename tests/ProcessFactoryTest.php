@@ -12,41 +12,68 @@ use PHPUnit\Framework\TestCase;
 
 class ProcessFactoryTest extends TestCase
 {
-    public function testBasics()
+    public function testBasics(): void
     {
         $factory1 = new ProcessFactory();
 
         $this->assertNull($factory1->getDir());
-        $this->assertSame('false', $factory1->getProgram());
-        $this->assertSame([], $factory1->getArgs());
+
+        if (PHP_VERSION_ID >= 70400) {
+            $this->assertSame('false', $factory1->getCmd());
+        }
+
         $this->assertNull($factory1->getEnv());
         $this->assertSame(Process::class, $factory1->getProcessClass());
 
+        $cmd = [ 'php', '-d', 'foo=bar', '-r' ];
         $dir = dirname(__DIR__);
-        $args = [ '-d', 'foo=bar', '-r' ];
         $env = [ 'BAZ' => 'qux', 'BAZ2' => 'qux-qux' ];
 
-        $factory2 =
-            new ProcessFactory($dir, 'php', $args, $env, OutputProcess::class);
+        $factory2 = new ProcessFactory(
+            $cmd,
+            $dir,
+            $env,
+            null,
+            null,
+            OutputProcess::class
+        );
 
-        $this->assertSame($dir, $factory2->getDir());
-        $this->assertSame('php', $factory2->getProgram());
-        $this->assertSame($args, $factory2->getArgs());
+        if (PHP_VERSION_ID >= 70400) {
+            $this->assertSame($cmd, $factory2->getCmd());
+        }
+
         $this->assertSame($env, $factory2->getEnv());
         $this->assertSame(OutputProcess::class, $factory2->getProcessClass());
 
-        $process1 = $factory2->create('echo __DIR__ . PHP_EOL;');
+        $process1 = $factory2->create([ 'echo __DIR__ . PHP_EOL;' ]);
 
         $this->assertSame($dir . PHP_EOL, fgets($process1->getStdout()));
 
-        $process2 = $factory2->create('echo getenv("BAZ") . PHP_EOL;', true);
+        $process2 = $factory2->create('\'echo getenv("BAZ") . PHP_EOL;\'', true);
 
         $process2->open();
 
         $this->assertSame('qux' . PHP_EOL, fgets($process2->getStdout()));
+
+        $factory3 = new ProcessFactory(
+            'php -r',
+            $dir,
+            $env,
+            null,
+            null,
+            OutputProcess::class
+        );
+
+        $process3 = $factory3->create([ 'echo __DIR__ . PHP_EOL;' ]);
+
+        $this->assertSame($dir . PHP_EOL, fgets($process3->getStdout()));
+
+        $process4 = $factory3->create('"echo __DIR__ . PHP_EOL;"');
+
+        $this->assertSame($dir . PHP_EOL, fgets($process4->getStdout()));
     }
 
-    public function testDirectoryNotFound()
+    public function testDirectoryNotFound(): void
     {
         $dir = __DIR__ . DIRECTORY_SEPARATOR . 'foo';
 
@@ -56,6 +83,6 @@ class ProcessFactoryTest extends TestCase
         );
         $this->expectExceptionMessage(' not found');
 
-        new ProcessFactory($dir);
+        new ProcessFactory('cmd', $dir);
     }
 }

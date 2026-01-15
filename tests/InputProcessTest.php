@@ -10,9 +10,16 @@ use alcamo\exception\{
 };
 use PHPUnit\Framework\TestCase;
 
+class MyInputProcess extends InputProcess
+{
+    public const DESCRIPTOR_SPEC = [
+        0 => [ 'pipe', 'r' ]
+    ];
+}
+
 class InputProcessTest extends TestCase
 {
-    public function testCmd()
+    public function testCmd(): void
     {
         $cmd = [ 'php', '-r', 'echo "Lorem ipsum";' ];
 
@@ -27,7 +34,7 @@ class InputProcessTest extends TestCase
         $this->assertSame(0, $process->close());
     }
 
-    public function testDir()
+    public function testDir(): void
     {
         $cmd = "php -r 'echo __DIR__;'";
 
@@ -42,7 +49,7 @@ class InputProcessTest extends TestCase
         $this->assertSame(0, $process->close());
     }
 
-    public function testEnv()
+    public function testEnv(): void
     {
         $cmd = [ 'php', '-r', 'echo getenv("foo");' ];
 
@@ -57,7 +64,36 @@ class InputProcessTest extends TestCase
         $this->assertSame(0, $process->close());
     }
 
-    public function testStderr()
+    public function testDescriptorSpec(): void
+    {
+        $process = new InputProcess('false', null, null, null, null, true);
+
+        $this->assertSame(
+            Process::DESCRIPTOR_SPEC,
+            $process->getDescriptorSpec()
+        );
+
+        $process = new MyInputProcess(
+            'false',
+            null,
+            null,
+            [ 3 => [ 'file', '/tmp/foo.txt' ] ],
+            null,
+            true
+        );
+
+        $this->assertSame(
+            [
+                3 => [ 'file', '/tmp/foo.txt' ],
+                0 => [ 'pipe', 'r' ],
+                1 => STDOUT,
+                2 => STDERR
+            ],
+            $process->getDescriptorSpec()
+        );
+    }
+
+    public function testStderr(): void
     {
         $cmd = "php -r 'fwrite(STDERR, \"Lorem ipsum\");'";
 
@@ -70,7 +106,7 @@ class InputProcessTest extends TestCase
         $this->assertSame(0, $process->close());
     }
 
-    public function testClose()
+    public function testClose(): void
     {
         $cmd = "php -r 'exit(42);'";
 
@@ -81,7 +117,7 @@ class InputProcessTest extends TestCase
         $this->assertSame(42, $process->close());
     }
 
-    public function testDirectoryNotFound()
+    public function testDirectoryNotFound(): void
     {
         $dir = __DIR__ . DIRECTORY_SEPARATOR . 'foo';
 
@@ -94,7 +130,7 @@ class InputProcessTest extends TestCase
         new InputProcess('echo', $dir);
     }
 
-    public function testOpenedException()
+    public function testOpenedException(): void
     {
         $process = new InputProcess('echo');
 
@@ -106,7 +142,7 @@ class InputProcessTest extends TestCase
         $process->open();
     }
 
-    public function testClosedException()
+    public function testClosedException(): void
     {
         $process = new InputProcess('echo');
         $process->close();
@@ -119,7 +155,7 @@ class InputProcessTest extends TestCase
         $process->close();
     }
 
-    public function testUnsupportedException()
+    public function testUnsupportedException(): void
     {
         $process = new InputProcess('echo');
 
