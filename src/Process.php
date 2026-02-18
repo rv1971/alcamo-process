@@ -85,8 +85,8 @@ class Process
      *
      * @paramm $descriptorSpec Descriptor spec passed to
      * proc_open(). alcamo::process::Process::DESCRIPTOR_SPEC will be added to
-     * it. The descriptors 0, 1 and 2 will be assigned to their usual
-     * destinations if not specified.
+     * it. In the CLI SAPI, the descriptors 0, 1 and 2 will be assigned to
+     * their usual destinations if not specified.
      *
      * @param $options Options passed to proc_open(). Defaults to
      * alcamo::process::Process::OPTIONS.
@@ -101,12 +101,18 @@ class Process
         ?array $options = null,
         ?bool $deferOpen = null
     ) {
+        $descriptorSpec = (array)$descriptorSpec + static::DESCRIPTOR_SPEC;
+
+        if (defined('STDIN')) {
+            $descriptorSpec +=
+                [ constant('STDIN'), constant('STDOUT'), constant('STDERR') ];
+        }
+
         $this->initContext(
             $cmd,
             $dir,
             $env,
-            (array)$descriptorSpec
-                + static::DESCRIPTOR_SPEC + [ STDIN, STDOUT, STDERR ],
+            $descriptorSpec,
             $options ?? static::OPTIONS
         );
 
