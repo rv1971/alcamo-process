@@ -19,7 +19,7 @@ class ProcessFactoryTest extends TestCase
         $this->assertNull($factory1->getDir());
 
         if (PHP_VERSION_ID >= 70400) {
-            $this->assertSame('false', $factory1->getCmd());
+            $this->assertSame([ 'false' ], $factory1->getCmd());
         }
 
         $this->assertNull($factory1->getEnv());
