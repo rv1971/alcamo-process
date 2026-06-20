@@ -67,6 +67,10 @@ class Process
         'fwrite'              => 0
     ];
 
+    protected static $stdin_;  ///< resource
+    protected static $stdout_; ///< resource
+    protected static $stderr_; ///< resource
+
     protected $pipes_;   ///< ?array
     protected $process_; ///< ?resource
 
@@ -101,12 +105,27 @@ class Process
         ?array $options = null,
         ?bool $deferOpen = null
     ) {
+        if (!isset(self::$stdin_)) {
+            self::$stdin_ = defined('STDIN')
+                ? constant('STDIN')
+                : fopen('php://stdin', 'r');
+
+            self::$stdout_ = defined('STDOUT')
+                ? constant('STDOUT')
+                : fopen('php://stdout', 'w');
+
+            self::$stderr_ = defined('STDERR')
+                ? constant('STDERR')
+                : fopen('php://stderr', 'w');
+        }
+
         $this->initContext(
             $cmd,
             $dir,
             $env,
             (array)$descriptorSpec
-                + static::DESCRIPTOR_SPEC + [ STDIN, STDOUT, STDERR ],
+                + static::DESCRIPTOR_SPEC
+                + [ self::$stdin_, self::$stdout_, self::$stderr_ ],
             $options ?? static::OPTIONS
         );
 
